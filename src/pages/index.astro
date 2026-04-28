@@ -1,17 +1,46 @@
 ---
-
 ---
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Creador de Grupos - Almanaque</title>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+        <h1 class="text-3xl font-bold mb-6">📅 Organiza tu viaje</h1>
+        <p class="text-gray-600 mb-8">Escribe el nombre de tu grupo para empezar a cuadrar fechas.</p>
+        
+        <input 
+            type="text" 
+            id="groupName" 
+            placeholder="ej: tailandia-2026" 
+            class="w-full p-4 border-2 border-gray-200 rounded-xl mb-4 outline-none focus:border-blue-500 transition-all"
+        />
+        
+        <button 
+            id="btnGo"
+            class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-colors"
+        >
+            Crear / Entrar al grupo
+        </button>
+    </div>
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+    <script>
+        const input = document.getElementById('groupName') as HTMLInputElement;
+        const btn = document.getElementById('btnGo');
+
+        btn?.addEventListener('click', () => {
+            const name = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+            if (name) {
+                window.location.href = `/groups/${name}`;
+            } else {
+                alert("Por favor, ponle un nombre al grupo");
+            }
+        });
+    </script>
+</body>
 </html>
+
+<style is:global>
+    @import "tailwindcss";
+</style>
