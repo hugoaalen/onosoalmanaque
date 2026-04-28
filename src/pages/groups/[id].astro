@@ -1,0 +1,31 @@
+---
+// Importamos el componente con el nombre EXACTO que tienes en VS Code
+import GroupCalendar from '../../components/Calendar';
+const { id } = Astro.params;
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Calendario - {id}</title>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+  <main class="max-w-5xl mx-auto px-4 py-12">
+    <h1 class="text-center text-4xl font-extrabold pb-10 text-gray-900 tracking-tight">
+      Planificador: <span class="text-blue-600 italic">{id}</span>
+    </h1>
+    
+    <GroupCalendar client:load groupId={id as string} />
+  </main>
+</body>
+</html>
+
+<style is:global>
+  @import "tailwindcss"; /* Esta línea carga todo Tailwind v4 */
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+</style>
