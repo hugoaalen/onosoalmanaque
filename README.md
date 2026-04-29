@@ -1,43 +1,25 @@
-# Astro Starter Kit: Minimal
+# ✈️ oNoSoAlMaNaQuE - Planificador de Vacaciones
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Un calendario colaborativo en tiempo real diseñado para que grupos de amigos cuadren sus fechas de vacaciones sin fricciones. Olvida las encuestas de WhatsApp; marca tu disponibilidad visualmente y encuentra el "match" perfecto para tu próximo viaje.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+![Status](https://img.shields.io/badge/Status-Functional-success)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)
+![Supabase](https://img.shields.io/badge/Backend-Supabase-blue?logo=supabase)
 
-## 🚀 Project Structure
+---
 
-Inside of your Astro project, you'll see the following folders and files:
+## ✨ Características Principales
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+- **🔗 Enlaces Únicos (UUID):** Los grupos se generan con identificadores únicos de 128 bits para garantizar privacidad y evitar que terceros adivinen la URL de tu viaje.
+- **⚡ Tiempo Real (Realtime):** Implementado con WebSockets a través de Supabase para ver los cambios de tus amigos al instante sin refrescar la página.
+- **🎨 Identidad Visual Dinámica:** Cada usuario recibe un color único generado mediante un algoritmo de *hashing* basado en su nombre.
+- **📱 Responsive & Moderno:** Interfaz fluida construida con Tailwind CSS v4, optimizada para móviles y escritorio.
+- **🌚 UX Optimizada:** Incluye *Optimistic UI* para que la interacción sea instantánea, ocultando la latencia del servidor.
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## 🛠️ Tech Stack
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- **Frontend:** [Astro](https://astro.build/) + [React](https://reactjs.org/)
+- **Estilos:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **Backend:** [Supabase](https://supabase.com/) (PostgreSQL + Realtime)
+- **Iconografía:** [Lucide React](https://lucide.dev/)
+- **Gestión de Fechas:** [date-fns](https://date-fns.org/)

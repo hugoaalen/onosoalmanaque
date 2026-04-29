@@ -7,15 +7,12 @@ const { id } = Astro.params;
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width" />
-    <title>Calendario - {id}</title>
+    <title>oNoSoAlMaNaQuE</title>
   </head>
   <body class="bg-gray-100 min-h-screen">
   <main class="max-w-5xl mx-auto px-4 py-12">
-    <h1 class="text-center text-4xl font-extrabold pb-10 text-gray-900 tracking-tight">
-      Planificador: <span class="text-blue-600 italic">{id}</span>
-    </h1>
     
     <GroupCalendar client:load groupId={id as string} />
   </main>

@@ -1,40 +1,91 @@
 ---
+// index.astro
 ---
 <html lang="es">
 <head>
     <meta charset="utf-8" />
-    <title>Creador de Grupos - Almanaque</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Almanaque</title>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
-        <h1 class="text-3xl font-bold mb-6">📅 Organiza tu viaje</h1>
-        <p class="text-gray-600 mb-8">Escribe el nombre de tu grupo para empezar a cuadrar fechas.</p>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-10 rounded-3xl shadow-2xl max-w-md w-full text-center border border-slate-100">
+        <div class="mb-6 inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl">
+            <span class="text-4xl">✈️</span>
+        </div>
         
-        <input 
-            type="text" 
-            id="groupName" 
-            placeholder="ej: tailandia-2026" 
-            class="w-full p-4 border-2 border-gray-200 rounded-xl mb-4 outline-none focus:border-blue-500 transition-all"
-        />
+        <h1 class="text-3xl font-extrabold mb-3 text-slate-800 tracking-tight">Organiza tu viaje</h1>
+        <p class="text-slate-500 mb-8 leading-relaxed">Crea un grupo privado y comparte el enlace único con tus amigos para cuadrar fechas.</p>
         
-        <button 
-            id="btnGo"
-            class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-colors"
-        >
-            Crear / Entrar al grupo
-        </button>
+        <div class="space-y-4">
+            <input 
+                type="text" 
+                id="groupName" 
+                placeholder="Nombre del viaje (ej: Tailandia 2026)" 
+                class="w-full p-4 border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-lg"
+            />
+            
+            <button 
+                id="btnGo"
+                class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+            >
+                <span id="btnText">Crear grupo privado</span>
+                <div id="loader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            </button>
+        </div>
+        
+        <p class="mt-6 text-xs text-slate-400">
+            Al crear un grupo, se generará un enlace único y privado.
+        </p>
     </div>
 
     <script>
-        const input = document.getElementById('groupName') as HTMLInputElement;
-        const btn = document.getElementById('btnGo');
+        import { createClient } from '@supabase/supabase-js';
 
-        btn?.addEventListener('click', () => {
-            const name = input.value.trim().toLowerCase().replace(/\s+/g, '-');
-            if (name) {
-                window.location.href = `/groups/${name}`;
-            } else {
+        // Inicializamos el cliente de Supabase (Astro permite usar envs en scripts)
+        const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+        const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const input = document.getElementById('groupName') as HTMLInputElement;
+        const btn = document.getElementById('btnGo') as HTMLButtonElement;
+        const btnText = document.getElementById('btnText');
+        const loader = document.getElementById('loader');
+
+        btn?.addEventListener('click', async () => {
+            const name = input.value.trim();
+            
+            if (!name) {
                 alert("Por favor, ponle un nombre al grupo");
+                return;
+            }
+
+            // Estado de carga
+            btn.disabled = true;
+            btnText!.textContent = "Generando...";
+            loader?.classList.remove('hidden');
+
+            try {
+                // 1. Insertamos el nuevo grupo en la tabla 'groups'
+                const { data, error } = await supabase
+                    .from('groups')
+                    .insert([{ name: name }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    // 2. Redirigimos al ID único (UUID) que ha generado Supabase
+                    window.location.href = `/groups/${data.id}`;
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error al crear el grupo. Revisa tu conexión.");
+                
+                // Revertir estado de carga
+                btn.disabled = false;
+                btnText!.textContent = "Crear grupo privado";
+                loader?.classList.add('hidden');
             }
         });
     </script>
