@@ -5,86 +5,98 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Almanaque</title>
+    <meta name="description" content="Encuentra las mejores fechas para viajar con tu grupo de amigos." />
+    <link rel="icon" href="/favicon.ico" />
+    <title>Almanaque - Cuadra las fechas de tu viaje</title>
 </head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-10 rounded-3xl shadow-2xl max-w-md w-full text-center border border-slate-100">
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+    <main class="bg-white p-6 sm:p-10 rounded-3xl shadow-2xl max-w-md w-full text-center border border-slate-100">
         <div class="mb-6 inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl">
-            <span class="text-4xl">✈️</span>
+            <span class="text-4xl" aria-hidden="true">✈️</span>
         </div>
         
         <h1 class="text-3xl font-extrabold mb-3 text-slate-800 tracking-tight">Organiza tu viaje</h1>
-        <p class="text-slate-500 mb-8 leading-relaxed">Crea un grupo privado y comparte el enlace único con tus amigos para cuadrar fechas.</p>
+        <p class="text-slate-500 mb-8 leading-relaxed">Crea un grupo y comparte el enlace de invitación para encontrar las fechas que os vienen bien.</p>
         
-        <div class="space-y-4">
+        <form id="createGroupForm" class="space-y-4">
+            <label for="groupName" class="sr-only">Nombre del viaje</label>
             <input 
                 type="text" 
                 id="groupName" 
                 placeholder="Nombre del viaje (ej: Tailandia 2026)" 
+                minlength="2"
+                maxlength="80"
+                autocomplete="off"
+                required
                 class="w-full p-4 border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-lg"
             />
             
             <button 
+                type="submit"
                 id="btnGo"
                 class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
             >
-                <span id="btnText">Crear grupo privado</span>
-                <div id="loader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span id="btnText">Crear grupo</span>
+                <span id="loader" aria-hidden="true" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             </button>
-        </div>
+        </form>
+
+        <p id="formMessage" role="status" class="hidden mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700"></p>
         
         <p class="mt-6 text-xs text-slate-400">
-            Al crear un grupo, se generará un enlace único y privado.
+            El grupo no aparece en búsquedas, pero cualquiera con el enlace podrá verlo.
         </p>
-    </div>
+    </main>
 
     <script>
         import { createClient } from '@supabase/supabase-js';
 
-        // Inicializamos el cliente de Supabase (Astro permite usar envs en scripts)
         const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
         const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        const form = document.getElementById('createGroupForm') as HTMLFormElement;
         const input = document.getElementById('groupName') as HTMLInputElement;
         const btn = document.getElementById('btnGo') as HTMLButtonElement;
         const btnText = document.getElementById('btnText');
         const loader = document.getElementById('loader');
+        const formMessage = document.getElementById('formMessage');
 
-        btn?.addEventListener('click', async () => {
-            const name = input.value.trim();
-            
-            if (!name) {
-                alert("Por favor, ponle un nombre al grupo");
-                return;
-            }
+        form?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const name = input.value.trim().replace(/\s+/g, ' ');
 
-            // Estado de carga
+            if (name.length < 2) return;
+
             btn.disabled = true;
-            btnText!.textContent = "Generando...";
+            btnText!.textContent = "Creando...";
             loader?.classList.remove('hidden');
+            formMessage?.classList.add('hidden');
 
             try {
-                // 1. Insertamos el nuevo grupo en la tabla 'groups'
+                const accessToken = crypto.randomUUID();
+                const adminToken = crypto.randomUUID();
                 const { data, error } = await supabase
-                    .from('groups')
-                    .insert([{ name: name }])
-                    .select()
-                    .single();
+                    .rpc('create_planning_group', {
+                        p_name: name,
+                        p_access_token: accessToken,
+                        p_admin_token: adminToken,
+                    });
 
                 if (error) throw error;
 
                 if (data) {
-                    // 2. Redirigimos al ID único (UUID) que ha generado Supabase
-                    window.location.href = `/groups/${data.id}`;
+                    window.localStorage.setItem(`almanaque-admin-${data}`, adminToken);
+                    window.location.href = `/groups/${data}#key=${encodeURIComponent(accessToken)}`;
                 }
             } catch (error) {
                 console.error(error);
-                alert("Error al crear el grupo. Revisa tu conexión.");
-                
-                // Revertir estado de carga
+                if (formMessage) {
+                    formMessage.textContent = "No se pudo crear el grupo. Inténtalo de nuevo.";
+                    formMessage.classList.remove('hidden');
+                }
                 btn.disabled = false;
-                btnText!.textContent = "Crear grupo privado";
+                btnText!.textContent = "Crear grupo";
                 loader?.classList.add('hidden');
             }
         });
