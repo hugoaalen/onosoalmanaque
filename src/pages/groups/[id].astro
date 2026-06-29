@@ -12,7 +12,7 @@ const { id } = Astro.params;
     <title>Almanaque - Planificador de grupo</title>
   </head>
   <body class="min-h-screen bg-slate-50">
-    <main class="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10">
+    <main class="mx-auto max-w-7xl px-3 pb-[calc(env(safe-area-inset-bottom)+5rem)] pt-6 sm:px-6 sm:py-10">
       <GroupCalendar client:load groupId={id as string} />
     </main>
   </body>

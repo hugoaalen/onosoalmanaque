@@ -1582,86 +1582,88 @@ export default function Calendar({ groupId }: { groupId: string }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-px bg-slate-200">
-          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
-            <div
-              key={day}
-              className="bg-white px-1 py-3 text-center text-[10px] font-black uppercase tracking-wide text-slate-400 sm:p-4 sm:text-xs sm:tracking-widest"
-            >
-              {day}
-            </div>
-          ))}
-
-          {calendarDays.map((day) => {
-            const dateString = format(day, 'yyyy-MM-dd');
-            const dayEntries = entriesByDate.get(dateString) ?? [];
-            const myEntry = dayEntries.find(
-              (entry) => entry.participant_id === identity?.participantId,
-            );
-            const isCurrentMonth =
-              startOfMonth(day).getTime() === monthStart.getTime();
-            const statusConfig = statusOptions.find(
-              (option) => option.value === myEntry?.status,
-            );
-
-            return (
-              <button
-                type="button"
-                key={dateString}
-                onClick={() => void setDateAvailability(day)}
-                disabled={Boolean(finalizedProposalId)}
-                aria-label={`${format(day, "d 'de' MMMM", {
-                  locale: es,
-                })}. ${
-                  myEntry
-                    ? `Tu estado: ${statusConfig?.label}`
-                    : 'Sin estado personal'
-                }`}
-                className={`relative min-h-24 overflow-hidden p-1.5 text-left transition disabled:cursor-not-allowed sm:min-h-32 sm:p-3 ${
-                  isCurrentMonth
-                    ? 'bg-white hover:bg-slate-50'
-                    : 'bg-slate-50 text-slate-300'
-                } ${myEntry ? 'ring-2 ring-inset ring-blue-200' : ''}`}
+        <div className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+          <div className="grid min-w-[42rem] grid-cols-7 gap-px bg-slate-200 sm:min-w-0">
+            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
+              <div
+                key={day}
+                className="bg-white px-2 py-3 text-center text-[10px] font-black uppercase tracking-wide text-slate-400 sm:p-4 sm:text-xs sm:tracking-widest"
               >
-                <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold sm:text-sm ${
-                    isSameDay(day, new Date())
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-700'
+                {day}
+              </div>
+            ))}
+
+            {calendarDays.map((day) => {
+              const dateString = format(day, 'yyyy-MM-dd');
+              const dayEntries = entriesByDate.get(dateString) ?? [];
+              const myEntry = dayEntries.find(
+                (entry) => entry.participant_id === identity?.participantId,
+              );
+              const isCurrentMonth =
+                startOfMonth(day).getTime() === monthStart.getTime();
+              const statusConfig = statusOptions.find(
+                (option) => option.value === myEntry?.status,
+              );
+
+              return (
+                <button
+                  type="button"
+                  key={dateString}
+                  onClick={() => void setDateAvailability(day)}
+                  disabled={Boolean(finalizedProposalId)}
+                  aria-label={`${format(day, "d 'de' MMMM", {
+                    locale: es,
+                  })}. ${
+                    myEntry
+                      ? `Tu estado: ${statusConfig?.label}`
+                      : 'Sin estado personal'
                   }`}
+                  className={`relative min-h-28 overflow-hidden p-2 text-left transition disabled:cursor-not-allowed sm:min-h-32 sm:p-3 ${
+                    isCurrentMonth
+                      ? 'bg-white hover:bg-slate-50'
+                      : 'bg-slate-50 text-slate-300'
+                  } ${myEntry ? 'ring-2 ring-inset ring-blue-200' : ''}`}
                 >
-                  {format(day, 'd')}
-                </span>
-                <div className="mt-1.5 flex flex-wrap gap-1 sm:flex-col">
-                  {dayEntries.slice(0, 5).map((entry) => {
-                    const config =
-                      statusOptions.find(
-                        (option) => option.value === entry.status,
-                      ) ?? statusOptions[0];
-                    return (
-                      <span
-                        key={entry.id}
-                        title={`${entry.user_name}: ${config.label}`}
-                        className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[9px] font-black sm:h-auto sm:justify-start sm:rounded-lg sm:px-2 sm:py-1 sm:text-[10px] ${config.badgeClass}`}
-                      >
-                        <span className="sm:hidden">
-                          {getInitials(entry.user_name)}
+                  <span
+                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold sm:text-sm ${
+                      isSameDay(day, new Date())
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-700'
+                    }`}
+                  >
+                    {format(day, 'd')}
+                  </span>
+                  <div className="mt-1.5 flex flex-wrap gap-1 sm:flex-col">
+                    {dayEntries.slice(0, 5).map((entry) => {
+                      const config =
+                        statusOptions.find(
+                          (option) => option.value === entry.status,
+                        ) ?? statusOptions[0];
+                      return (
+                        <span
+                          key={entry.id}
+                          title={`${entry.user_name}: ${config.label}`}
+                          className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[9px] font-black sm:h-auto sm:justify-start sm:rounded-lg sm:px-2 sm:py-1 sm:text-[10px] ${config.badgeClass}`}
+                        >
+                          <span className="sm:hidden">
+                            {getInitials(entry.user_name)}
+                          </span>
+                          <span className="hidden truncate sm:inline">
+                            {entry.user_name} · {config.shortLabel}
+                          </span>
                         </span>
-                        <span className="hidden truncate sm:inline">
-                          {entry.user_name} · {config.shortLabel}
-                        </span>
+                      );
+                    })}
+                    {dayEntries.length > 5 && (
+                      <span className="text-[9px] font-bold text-slate-500">
+                        +{dayEntries.length - 5}
                       </span>
-                    );
-                  })}
-                  {dayEntries.length > 5 && (
-                    <span className="text-[9px] font-bold text-slate-500">
-                      +{dayEntries.length - 5}
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
