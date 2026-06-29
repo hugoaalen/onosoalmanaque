@@ -197,6 +197,7 @@ export default function Calendar({ groupId }: { groupId: string }) {
   const proposalStartRef = useRef<HTMLInputElement>(null);
   const proposalEndRef = useRef<HTMLInputElement>(null);
   const proposalNoteRef = useRef<HTMLInputElement>(null);
+  const calendarSectionRef = useRef<HTMLElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -412,6 +413,22 @@ export default function Calendar({ groupId }: { groupId: string }) {
           { locale: es },
         )}`
       : format(currentMonth, 'MMMM yyyy', { locale: es });
+
+  const moveCalendar = (direction: -1 | 1) => {
+    setCurrentMonth((previousMonth) =>
+      calendarView === 'week'
+        ? addDays(previousMonth, direction * 7)
+        : direction === 1
+          ? addMonths(previousMonth, 1)
+          : subMonths(previousMonth, 1),
+    );
+    window.requestAnimationFrame(() => {
+      calendarSectionRef.current?.scrollIntoView({
+        block: 'start',
+        behavior: 'auto',
+      });
+    });
+  };
 
   const entriesByDate = useMemo(() => {
     const result = new Map<string, Availability[]>();
@@ -1566,7 +1583,10 @@ export default function Calendar({ groupId }: { groupId: string }) {
         </section>
       )}
 
-      <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/60">
+      <section
+        ref={calendarSectionRef}
+        className="scroll-mt-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/60"
+      >
         <div className="flex items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/70 p-4 sm:p-6">
           <div>
             <h2 className="text-xl font-black capitalize text-slate-800 sm:text-2xl">
@@ -1583,13 +1603,7 @@ export default function Calendar({ groupId }: { groupId: string }) {
               aria-label={
                 calendarView === 'week' ? 'Semana anterior' : 'Mes anterior'
               }
-              onClick={() =>
-                setCurrentMonth(
-                  calendarView === 'week'
-                    ? addDays(currentMonth, -7)
-                    : subMonths(currentMonth, 1),
-                )
-              }
+              onClick={() => moveCalendar(-1)}
               className="rounded-xl border border-slate-200 bg-white p-3 text-slate-600 hover:bg-slate-50"
             >
               <ChevronLeft aria-hidden="true" />
@@ -1599,13 +1613,7 @@ export default function Calendar({ groupId }: { groupId: string }) {
               aria-label={
                 calendarView === 'week' ? 'Semana siguiente' : 'Mes siguiente'
               }
-              onClick={() =>
-                setCurrentMonth(
-                  calendarView === 'week'
-                    ? addDays(currentMonth, 7)
-                    : addMonths(currentMonth, 1),
-                )
-              }
+              onClick={() => moveCalendar(1)}
               className="rounded-xl border border-slate-200 bg-white p-3 text-slate-600 hover:bg-slate-50"
             >
               <ChevronRight aria-hidden="true" />
@@ -1722,7 +1730,7 @@ export default function Calendar({ groupId }: { groupId: string }) {
             })}
           </div>
         ) : (
-          <div className="grid gap-px bg-slate-200">
+          <div className="grid gap-px bg-slate-200 [overflow-anchor:none]">
             {weekDays.map((day) => {
               const dateString = format(day, 'yyyy-MM-dd');
               const dayEntries = entriesByDate.get(dateString) ?? [];
@@ -1746,7 +1754,7 @@ export default function Calendar({ groupId }: { groupId: string }) {
                       ? `Tu estado: ${statusConfig?.label}`
                       : 'Sin estado personal'
                   }`}
-                  className={`bg-white p-4 text-left transition disabled:cursor-not-allowed ${
+                  className={`min-h-44 bg-white p-4 text-left transition disabled:cursor-not-allowed ${
                     myEntry ? 'ring-2 ring-inset ring-blue-200' : ''
                   }`}
                 >
