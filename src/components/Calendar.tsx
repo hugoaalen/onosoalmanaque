@@ -185,6 +185,7 @@ export default function Calendar({ groupId }: { groupId: string }) {
   const [origin, setOrigin] = useState('');
   const [preferenceNotes, setPreferenceNotes] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
   const [selectedStatus, setSelectedStatus] =
     useState<AvailabilityStatus>('available');
   const [rangeStart, setRangeStart] = useState('');
@@ -397,6 +398,20 @@ export default function Calendar({ groupId }: { groupId: string }) {
     start: calendarStart,
     end: calendarEnd,
   });
+  const weekStart = startOfWeek(currentMonth, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(currentMonth, { weekStartsOn: 1 });
+  const weekDays = eachDayOfInterval({
+    start: weekStart,
+    end: weekEnd,
+  });
+  const calendarTitle =
+    calendarView === 'week'
+      ? `${format(weekStart, 'd MMM', { locale: es })} - ${format(
+          weekEnd,
+          'd MMM yyyy',
+          { locale: es },
+        )}`
+      : format(currentMonth, 'MMMM yyyy', { locale: es });
 
   const entriesByDate = useMemo(() => {
     const result = new Map<string, Availability[]>();
@@ -1555,7 +1570,7 @@ export default function Calendar({ groupId }: { groupId: string }) {
         <div className="flex items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/70 p-4 sm:p-6">
           <div>
             <h2 className="text-xl font-black capitalize text-slate-800 sm:text-2xl">
-              {format(currentMonth, 'MMMM yyyy', { locale: es })}
+              {calendarTitle}
             </h2>
             <p className="mt-1 text-xs text-slate-500">
               {participants.length} participante
@@ -1565,16 +1580,32 @@ export default function Calendar({ groupId }: { groupId: string }) {
           <div className="flex gap-2">
             <button
               type="button"
-              aria-label="Mes anterior"
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              aria-label={
+                calendarView === 'week' ? 'Semana anterior' : 'Mes anterior'
+              }
+              onClick={() =>
+                setCurrentMonth(
+                  calendarView === 'week'
+                    ? addDays(currentMonth, -7)
+                    : subMonths(currentMonth, 1),
+                )
+              }
               className="rounded-xl border border-slate-200 bg-white p-3 text-slate-600 hover:bg-slate-50"
             >
               <ChevronLeft aria-hidden="true" />
             </button>
             <button
               type="button"
-              aria-label="Mes siguiente"
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              aria-label={
+                calendarView === 'week' ? 'Semana siguiente' : 'Mes siguiente'
+              }
+              onClick={() =>
+                setCurrentMonth(
+                  calendarView === 'week'
+                    ? addDays(currentMonth, 7)
+                    : addMonths(currentMonth, 1),
+                )
+              }
               className="rounded-xl border border-slate-200 bg-white p-3 text-slate-600 hover:bg-slate-50"
             >
               <ChevronRight aria-hidden="true" />
@@ -1582,94 +1613,187 @@ export default function Calendar({ groupId }: { groupId: string }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-px bg-slate-200">
-          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
-            <div
-              key={day}
-              className="bg-white px-0.5 py-2 text-center text-[9px] font-black uppercase tracking-wide text-slate-400 sm:p-4 sm:text-xs sm:tracking-widest"
-            >
-              {day}
-            </div>
-          ))}
-
-          {calendarDays.map((day) => {
-            const dateString = format(day, 'yyyy-MM-dd');
-            const dayEntries = entriesByDate.get(dateString) ?? [];
-            const myEntry = dayEntries.find(
-              (entry) => entry.participant_id === identity?.participantId,
-            );
-            const isCurrentMonth =
-              startOfMonth(day).getTime() === monthStart.getTime();
-            const statusConfig = statusOptions.find(
-              (option) => option.value === myEntry?.status,
-            );
-
-            return (
+        <div className="border-b border-slate-100 bg-white p-3 sm:p-4">
+          <div className="grid grid-cols-2 rounded-2xl bg-slate-100 p-1 text-sm font-black text-slate-500 sm:inline-grid">
+            {(['month', 'week'] as const).map((view) => (
               <button
+                key={view}
                 type="button"
-                key={dateString}
-                onClick={() => void setDateAvailability(day)}
-                disabled={Boolean(finalizedProposalId)}
-                aria-label={`${format(day, "d 'de' MMMM", {
-                  locale: es,
-                })}. ${
-                  myEntry
-                    ? `Tu estado: ${statusConfig?.label}`
-                    : 'Sin estado personal'
+                onClick={() => setCalendarView(view)}
+                className={`rounded-xl px-4 py-2 transition ${
+                  calendarView === view
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'hover:text-slate-700'
                 }`}
-                className={`relative min-h-20 overflow-hidden p-1 text-left transition disabled:cursor-not-allowed sm:min-h-32 sm:p-3 ${
-                  isCurrentMonth
-                    ? 'bg-white hover:bg-slate-50'
-                    : 'bg-slate-50 text-slate-300'
-                } ${myEntry ? 'ring-2 ring-inset ring-blue-200' : ''}`}
               >
-                <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold sm:h-7 sm:w-7 sm:text-sm ${
-                    isSameDay(day, new Date())
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-700'
+                {view === 'month' ? 'Mes' : 'Semana'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {calendarView === 'month' ? (
+          <div className="grid grid-cols-7 gap-px bg-slate-200">
+            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
+              <div
+                key={day}
+                className="bg-white px-0.5 py-2 text-center text-[9px] font-black uppercase tracking-wide text-slate-400 sm:p-4 sm:text-xs sm:tracking-widest"
+              >
+                {day}
+              </div>
+            ))}
+
+            {calendarDays.map((day) => {
+              const dateString = format(day, 'yyyy-MM-dd');
+              const dayEntries = entriesByDate.get(dateString) ?? [];
+              const myEntry = dayEntries.find(
+                (entry) => entry.participant_id === identity?.participantId,
+              );
+              const isCurrentMonth =
+                startOfMonth(day).getTime() === monthStart.getTime();
+              const statusConfig = statusOptions.find(
+                (option) => option.value === myEntry?.status,
+              );
+
+              return (
+                <button
+                  type="button"
+                  key={dateString}
+                  onClick={() => void setDateAvailability(day)}
+                  disabled={Boolean(finalizedProposalId)}
+                  aria-label={`${format(day, "d 'de' MMMM", {
+                    locale: es,
+                  })}. ${
+                    myEntry
+                      ? `Tu estado: ${statusConfig?.label}`
+                      : 'Sin estado personal'
+                  }`}
+                  className={`relative min-h-20 overflow-hidden p-1 text-left transition disabled:cursor-not-allowed sm:min-h-32 sm:p-3 ${
+                    isCurrentMonth
+                      ? 'bg-white hover:bg-slate-50'
+                      : 'bg-slate-50 text-slate-300'
+                  } ${myEntry ? 'ring-2 ring-inset ring-blue-200' : ''}`}
+                >
+                  <span
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold sm:h-7 sm:w-7 sm:text-sm ${
+                      isSameDay(day, new Date())
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-700'
+                    }`}
+                  >
+                    {format(day, 'd')}
+                  </span>
+                  <div className="mt-1 flex flex-wrap gap-0.5 sm:mt-1.5 sm:flex-col sm:gap-1">
+                    {dayEntries.slice(0, 5).map((entry, index) => {
+                      const config =
+                        statusOptions.find(
+                          (option) => option.value === entry.status,
+                        ) ?? statusOptions[0];
+                      return (
+                        <span
+                          key={entry.id}
+                          title={`${entry.user_name}: ${config.label}`}
+                          className={`h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[8px] font-black sm:h-auto sm:justify-start sm:rounded-lg sm:px-2 sm:py-1 sm:text-[10px] ${
+                            index >= 3 ? 'hidden sm:flex' : 'flex'
+                          } ${config.badgeClass}`}
+                        >
+                          <span className="sm:hidden">
+                            {getInitials(entry.user_name)}
+                          </span>
+                          <span className="hidden truncate sm:inline">
+                            {entry.user_name} · {config.shortLabel}
+                          </span>
+                        </span>
+                      );
+                    })}
+                    {dayEntries.length > 3 && (
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-100 px-0.5 text-[8px] font-black text-slate-500 sm:hidden">
+                        +{dayEntries.length - 3}
+                      </span>
+                    )}
+                    {dayEntries.length > 5 && (
+                      <span className="hidden text-[9px] font-bold text-slate-500 sm:inline">
+                        +{dayEntries.length - 5}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid gap-px bg-slate-200">
+            {weekDays.map((day) => {
+              const dateString = format(day, 'yyyy-MM-dd');
+              const dayEntries = entriesByDate.get(dateString) ?? [];
+              const myEntry = dayEntries.find(
+                (entry) => entry.participant_id === identity?.participantId,
+              );
+              const statusConfig = statusOptions.find(
+                (option) => option.value === myEntry?.status,
+              );
+
+              return (
+                <button
+                  type="button"
+                  key={dateString}
+                  onClick={() => void setDateAvailability(day)}
+                  disabled={Boolean(finalizedProposalId)}
+                  aria-label={`${format(day, "EEEE d 'de' MMMM", {
+                    locale: es,
+                  })}. ${
+                    myEntry
+                      ? `Tu estado: ${statusConfig?.label}`
+                      : 'Sin estado personal'
+                  }`}
+                  className={`bg-white p-4 text-left transition disabled:cursor-not-allowed ${
+                    myEntry ? 'ring-2 ring-inset ring-blue-200' : ''
                   }`}
                 >
-                  {format(day, 'd')}
-                </span>
-                <div className="mt-1 flex flex-wrap gap-0.5 sm:mt-1.5 sm:flex-col sm:gap-1">
-                  {dayEntries.slice(0, 5).map((entry, index) => {
-                    const config =
-                      statusOptions.find(
-                        (option) => option.value === entry.status,
-                      ) ?? statusOptions[0];
-                    return (
-                      <span
-                        key={entry.id}
-                        title={`${entry.user_name}: ${config.label}`}
-                        className={`h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[8px] font-black sm:h-auto sm:justify-start sm:rounded-lg sm:px-2 sm:py-1 sm:text-[10px] ${
-                          index >= 3 ? 'hidden sm:flex' : 'flex'
-                        } ${config.badgeClass}`}
-                      >
-                        <span className="sm:hidden">
-                          {getInitials(entry.user_name)}
-                        </span>
-                        <span className="hidden truncate sm:inline">
-                          {entry.user_name} · {config.shortLabel}
-                        </span>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+                        {format(day, 'EEEE', { locale: es })}
+                      </p>
+                      <p className="mt-1 text-2xl font-black text-slate-900">
+                        {format(day, "d 'de' MMMM", { locale: es })}
+                      </p>
+                    </div>
+                    {isSameDay(day, new Date()) && (
+                      <span className="rounded-full bg-blue-600 px-2.5 py-1 text-xs font-black text-white">
+                        Hoy
                       </span>
-                    );
-                  })}
-                  {dayEntries.length > 3 && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-100 px-0.5 text-[8px] font-black text-slate-500 sm:hidden">
-                      +{dayEntries.length - 3}
-                    </span>
+                    )}
+                  </div>
+
+                  {dayEntries.length > 0 ? (
+                    <div className="mt-4 grid gap-2">
+                      {dayEntries.map((entry) => {
+                        const config =
+                          statusOptions.find(
+                            (option) => option.value === entry.status,
+                          ) ?? statusOptions[0];
+                        return (
+                          <span
+                            key={entry.id}
+                            className={`flex items-center justify-between gap-3 rounded-2xl px-3 py-2 text-sm font-black ${config.badgeClass}`}
+                          >
+                            <span className="truncate">{entry.user_name}</span>
+                            <span className="shrink-0">{config.label}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="mt-4 rounded-2xl bg-slate-50 px-3 py-2 text-sm font-bold text-slate-400">
+                      Nadie ha marcado este día todavía.
+                    </p>
                   )}
-                  {dayEntries.length > 5 && (
-                    <span className="hidden text-[9px] font-bold text-slate-500 sm:inline">
-                      +{dayEntries.length - 5}
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <p className="mt-4 text-center text-xs text-slate-400">
